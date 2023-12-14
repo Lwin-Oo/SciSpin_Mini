@@ -1,16 +1,26 @@
+
+
+
+
+
+
+
+
+
 //_______________________________ LIBRARIES ________________________________//
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <EEPROM.h>
 #include <Adafruit_NeoPixel.h>
 #include <TMC2208Stepper.h>
-
+#include <AccelStepper.h>
 #if defined(ARDUINO) && ARDUINO >= 100
 #define printByte(args)  write(args);
 #else
 #define printByte(args)  print(args,BYTE);
 #endif
 
+uint8_t arrow[8] = {0x00, 0x04, 0x06, 0x1F, 0x1F, 0x06, 0x04, 0x00};
 //________________________________ Constants for pin assignments ________________________________//
 const int ROTARY_PIN_A = 5; // CLK
 const int ROTARY_PIN_B = 6; // DT
@@ -29,7 +39,7 @@ const int INTERVAL_DEFAULT = 200;
 const int CURRENT_LIMIT_DEFAULT = 600;
 const int MICROSTEP_DEFAULT = 256;
 const int MENU_UPDATE_INTERVAL = 200;
-
+const float SPEED_RPM_DEFAULT = 0.0;
 //________________________________ Function Prototypes ________________________________//
 void initializePeripherals(); 
 void motorReset();
@@ -44,6 +54,7 @@ void menuUpdate(unsigned char encoderAction);
 void subMenu1Update(unsigned char encoderAction);
 void subMenu2Update(unsigned char encoderAction);
 void subMenu3Update(unsigned char encoderAction);
+void subMenu4Update(unsigned char encoderAction);
 void numericalSubMenuUpdate(unsigned char encoderAction, int& value, int minValue, int maxValue); 
 void clearAndSetCursor(int row, int col);
 
@@ -79,6 +90,8 @@ int interval = 200;
 int currentLimit = 600;
 int microstep = 256;
 unsigned long NextTime = 0;
+float speedInRPM = 0.0;
+float targetSpeed = 0.0;
 
 //________________________________ Define the menu item structure ________________________________//
 struct MenuItem {
@@ -96,7 +109,7 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 //________________________________ Define the motor ________________________________//
 TMC2208Stepper driver = TMC2208Stepper(RX_PIN, TX_PIN);
-
+AccelStepper stepper(AccelStepper::DRIVER, STEP_PIN, DIR_PIN);
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRBW + NEO_KHZ800);
 
 void setup(){
@@ -197,7 +210,9 @@ void rotaryEncoderUpdate() {
           case 3: //subMenu1
             subMenu3Update(2);
             break;
-
+          case 4: //subMenu1
+            subMenu4Update(2);
+            break;
           default:
             menuUpdate(2);
             break;
@@ -223,7 +238,9 @@ void rotaryEncoderUpdate() {
           case 3: //subMenu1
             subMenu3Update(3);
             break;
-
+          case 4: //subMenu1
+            subMenu4Update(3);
+            break;
           default:
             menuUpdate(3);
             break;
@@ -252,7 +269,9 @@ void rotaryEncoderUpdate() {
         case 3: //subMenu1
           subMenu3Update(1);
           break;
-
+        case 4: //subMenu1
+          subMenu4Update(1);
+          break;
         default:
           menuUpdate(1);
           break;
@@ -270,6 +289,28 @@ void rotaryEncoderUpdate() {
   }
 
 }
+unsigned long pulsesPerRevolution = 1000; // Adjust as needed
+unsigned long timeForOneRevolution = 1000; // Time in milliseconds, adjust as needed
+
+// Function to calculate RPM
+float calculateRPM() {
+  return (float)(pulsesPerRevolution * 60.0) / ((float)timeForOneRevolution / 1000.0);
+}
+
+void setMotorRPM(float rpm) {
+  // Convert RPM to steps per minute (adjust as needed)
+  long stepsPerMinute = (long)(rpm * pulsesPerRevolution);
+
+  // Set the target position for the stepper motor
+  stepper.moveTo(stepsPerMinute);
+}
+
+void setMotorSpeed(float speedInRPM) {
+  setMotorRPM(speedInRPM);
+}
+
+
+
 
 
 
@@ -331,17 +372,6 @@ String findMenuTextFromCode(unsigned int menuCode) {
     }
   }
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 
