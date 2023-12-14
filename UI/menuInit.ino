@@ -26,6 +26,9 @@ void menuInit(){
  menu[i++].text = "REVERSE DIR";
  menu[i].code = 14;
  menu[i++].text = "SET MICROSTEPS";
+ menu[i].code = 15;
+ menu[i++].text = "SET SPEED";
+ 
 
 //2: "LED CONTROL"//
  menu[i].code = 20;
@@ -41,11 +44,12 @@ void menuInit(){
 //_______________ Third Layer _______________//
 
 //1: "MOTOR CONTROL"//
- menu[i].code = 110;
+ menu[i].code = 111;
  menu[i++].text = "INTERVALS:";
- menu[i].code = 140;
+ menu[i].code = 141;
  menu[i++].text = "MICROSTEPS:";
-
+ menu[i].code = 151;
+ menu[i++].text = "SPEED(RPM):";
 //2: "LED CONTROL"//
  menu[i].code = 220;
  menu[i++].text = "RETURN";
@@ -61,14 +65,15 @@ void menuInit(){
 //_______________ Fourth Layer _______________// 
 
 //2: "LED CONTROL"//
- menu[i].code = 2210;
+ menu[i].code = 2211;
  menu[i++].text = "RED";
- menu[i].code = 2220;
+ menu[i].code = 2221;
  menu[i++].text = "GREEN";
- menu[i].code = 2230;
+ menu[i].code = 2231;
  menu[i++].text = "BLUE";
 
  maxMenuItems = i + 1;
 
  readSettings();
 }
+
